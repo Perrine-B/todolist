@@ -1,37 +1,67 @@
 import { useState, useEffect } from "react"
-import { Grid, Typography, Box, AppBar, Toolbar, Button, Card, CardMedia, CardContent, CardActions } from "@mui/material";
+import { Grid, Typography, Box, AppBar, Toolbar, Button, Card, CardMedia, Snackbar, CardContent, CardActions } from "@mui/material";
 import axios from "axios";
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 
 function App() {
 
   const [tasks, setTasks] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    src: ""
+  })
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const instance = axios.create({
+    baseURL: 'http://localhost:3006/',
+    headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers" : "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"}
+  });
 
   useEffect(() => {
-
-    const instance = axios.create({
-      baseURL: 'http://localhost:3006/',
-      headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers" : "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"}
-    });
-
     const getTasks = async () => await instance.get("tasks").catch(e => console.log(e));
 
     const initTasks = async () => {
       try {
         const allTasks = await getTasks();
-
         const { data } = allTasks;
-        //setTasks([...allTasks.data]);
-        console.log(typeof data, data.db);
         return setTasks(data.db);
-
-        //setTasks(allTasks.data);
       } catch (e){
         console.log(e);
       }
-
     }
     initTasks();
   }, [])
+
+  /**
+   * Ajoute une méthode
+   */
+  const addTask = async () => {
+    setTasks([...tasks, newTask])
+    setIsModalOpen(false);
+
+    const addNewTask = async (newTask) => await instance.post("tasks/add", {...newTask}).catch(e => console.log(e));
+    const sendTask = async () => {
+      try {
+        const res = await addNewTask(newTask);
+        console.log(res);
+        const { status } = res;
+        if(status === 200){
+          console.log(status)
+          setOpenSnackbar(true);
+        }
+      } catch (e){
+        console.log(e);
+      }
+    }
+    sendTask();
+  }
+
+
 
 
   return (
@@ -46,7 +76,8 @@ function App() {
         </AppBar>
       </Box>
       <Grid sx={{ p:2}}>
-        <Button 
+        <Button
+          onClick={() => setIsModalOpen(true)}
           sx={{ 
             backgroundColor: "teal", 
             color: "white", 
@@ -84,6 +115,54 @@ function App() {
       </Card>)
     )}
     </Box>
+
+    <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <DialogTitle>Ajouter une tâche</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Titre"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+
+          />
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Description"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+          />
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="GIF"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setNewTask({...newTask, src: e.target.value})}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsModalOpen(false)}>Annuler</Button>
+          <Button onClick={() => addTask()}>Ajouter</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Votre tâche a été crée"
+      />
     </Grid>
   );
 }

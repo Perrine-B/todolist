@@ -1,10 +1,15 @@
-const db = require('./db');
+let db = require('./db');
 
 async function getTasks(){
-  const rows = db;
   return { db };
 }
 
+async function addTask(newTask){
+  db = [...db, newTask];
+  return { db }
+}
+
 module.exports = {
-    getTasks
+    getTasks,
+    addTask
 }
