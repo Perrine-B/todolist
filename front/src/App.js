@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Grid, Typography, Box, AppBar, Toolbar, Button, Card, CardMedia, Snackbar, CardContent, CardActions } from "@mui/material";
+import { Grid, Typography, Box, AppBar, Toolbar, Button, Card, CardMedia, Snackbar, CardContent, CardActions, snackbarClasses } from "@mui/material";
 import axios from "axios";
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -17,6 +17,7 @@ function App() {
     src: ""
   })
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("")
   const instance = axios.create({
     baseURL: 'http://localhost:3006/',
     headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers" : "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"}
@@ -52,6 +53,7 @@ function App() {
         const { status } = res;
         if(status === 200){
           console.log(status)
+          setSnackbarMessage("Votre tâche a bien été créée");
           setOpenSnackbar(true);
         }
       } catch (e){
@@ -59,6 +61,27 @@ function App() {
       }
     }
     sendTask();
+  }
+
+  const deleteItem = async (id) => {
+    console.log(id);
+    const newTaskArr = tasks.filter((task => task.id !== id));
+    setTasks(newTaskArr);
+    
+    const deleteTaskAPI = async (id) => await instance.delete(`tasks/delete/${id}`).catch(e => console.log(e));
+
+    const deleteTask = async () => {
+      try {
+        const res = await deleteTaskAPI(id);
+        if(res.status === 200){
+          setSnackbarMessage("Votre tâche a bien été supprimée");
+        }
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+    deleteTask();
   }
 
 
@@ -93,7 +116,7 @@ function App() {
       </Grid>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', p:4 }}>
       {tasks.length !== 0 && tasks.map((task =>  
-      <Card sx={{ maxWidth: 350, p: 4, m: 2 }}>
+      <Card sx={{ maxWidth: 350, p: 4, m: 2 }} key={task.id}>
         <CardMedia
           component="img"
           height="140"
@@ -109,7 +132,7 @@ function App() {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button size="small">Effacer</Button>
+          <Button onClick={() => deleteItem(task.id)} size="small">Effacer</Button>
           <Button size="small">Modifier</Button>
         </CardActions>
       </Card>)
@@ -161,7 +184,7 @@ function App() {
         open={openSnackbar}
         autoHideDuration={4000}
         onClose={() => setOpenSnackbar(false)}
-        message="Votre tâche a été crée"
+        message={snackbarMessage}
       />
     </Grid>
   );

@@ -31,24 +31,25 @@ router.get('/tasks', async function(req, res, next) {
     }
   });
 
-//   router.delete('/', async function(req, res, next) {
-//     try {
-//         Effacer une liste
-//       res.json(await .fetchPokemons());
-//     } catch (err) {
-//       console.error(`Error while getting pokemons `, err.message);
-//       next(err);
-//     }
-//   });
+  router.delete('/tasks/delete/:id', async function(req, res, next) {
+    try {
+      console.log(`Task n° ${req.params.id} is deleted`);
+      taskController.deleteTask(req.params.id);
+      res.send("deleted");
+    } catch (err) {
+      console.error(`Error on deleting task`, err.message);
+      next(err);
+    }
+  });
 
-//   router.put('/', async function(req, res, next) {
-//     try {
-//         Modifier une liste 
-//       res.json(await getAll.fetchPokemons());
-//     } catch (err) {
-//       console.error(`Error while getting pokemons `, err.message);
-//       next(err);
-//     }
-//   });
+  router.put('/tasks/update/:id', async function(req, res, next) {
+    try {
+      console.log(`Task n°${req.params.id} was updated`);
+      taskController.updateTask(req.params.id, req.body);
+    } catch (err) {
+      console.error(`Error while getting pokemons `, err.message);
+      next(err);
+    }
+  });
 
 module.exports = router;
